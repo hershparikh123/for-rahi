@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Our Story | A Journey</title>
+    <style>
+        :root {
+            --primary-pink: #ff4d6d;
+            --accent-glow: rgba(255, 77, 109, 0.6);
+            --glass: rgba(255, 255, 255, 0.1);
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #000;
+            font-family: 'Courier New', Courier, monospace;
+            overflow: hidden;
+        }
+
+        /* Fixed Background Image Logic */
+        #bg-image {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-image: linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)), url('IMG_3830.JPG');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            z-index: -1;
+            transition: all 2s ease-in-out, transform 4s ease-out;
+        }
+
+        #game-container {
+            position: relative;
+            background: var(--glass);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 24px;
+            padding: 60px 40px;
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            transition: opacity 0.8s ease;
+        }
+
+        #question-text {
+            color: #fff;
+            font-size: 1.4rem;
+            line-height: 1.6;
+            margin-bottom: 40px;
+            min-height: 120px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        input[type="text"] {
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+            width: 100%;
+            padding: 12px 0;
+            color: #fff;
+            font-size: 1.2rem;
+            text-align: center;
+            outline: none;
+            transition: border-color 0.4s ease, box-shadow 0.4s ease;
+            margin-bottom: 30px;
+            display: none;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+
+        input[type="text"]:focus {
+            border-bottom: 2px solid var(--primary-pink);
+            box-shadow: 0 10px 15px -10px var(--accent-glow);
+        }
+
+        button {
+            background: var(--primary-pink);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: none;
+            text-transform: uppercase;
+        }
+
+        button:hover { transform: translateY(-2px); box-shadow: 0 0 20px var(--accent-glow); }
+
+        #noBtn { position: absolute; background: #333; transition: none; }
+        .visible { display: inline-block !important; }
+        
+        .cursor {
+            display: inline-block;
+            width: 8px;
+            height: 1.2rem;
+            background-color: var(--primary-pink);
+            margin-left: 5px;
+            vertical-align: middle;
+            animation: blink 0.8s infinite;
+        }
+
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fall { to { transform: translateY(110vh) rotate(360deg); } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 50% { transform: translateX(10px); } 75% { transform: translateX(-10px); } }
+    </style>
+</head>
+<body>
+
+    <div id="bg-image"></div>
+
+    <div id="game-container">
+        <div id="question-text"></div>
+        <div id="input-area">
+            <input type="text" id="answerInput" placeholder="ENTER ANSWER..." autocomplete="off">
+            <button id="submitBtn" onclick="checkAnswer()">Confirm Choice</button>
+            <button id="startBtn" class="visible" onclick="nextQuestion()">Begin Our Quest</button>
+        </div>
+    </div>
+
+    <script>
+        const trivia = [
+            { q: "Adventures for Rahi began with a simple date. Do you remember where we went?", a: "hoboken" },
+            { q: "Hehe, yes Hoboken. Lowk mad I left early. Anyways, where did we see each other next? Hint: you think this sport is cute.", a: "yankees game" },
+            { q: "You're def looking these up. But ig I got rizz, so one thing led to another and we ended up in a sketchy parking lot. Butttttt, my next question is after our post sneak out sessions, where do we like to eat?", a: "wawa" },
+            { q: "BIG BACCKKKKKK. yikes. Anyways, fast forward through the timeline to our latest new york date. This is a hard one: where were we originially going to go to dinner? Make sure to spell it correctly.", a: "papillon" },
+            { q: "GIRL WHAT!! Ain't no way you remember. Brosama bin laden doesn't even know where we are going for Valentine's Day dinner: wait where are we going?", a: "kateen" }
+        ];
+
+        let currentStage = -1;
+
+        function typeWriter(text, i, fnCallback) {
+            if (i < text.length) {
+                document.getElementById("question-text").innerHTML = text.substring(0, i+1) + '<span class="cursor"></span>';
+                setTimeout(() => typeWriter(text, i + 1, fnCallback), 45);
+            } else if (typeof fnCallback == 'function') {
+                document.getElementById("question-text").innerHTML = text;
+                fnCallback();
+            }
+        }
+
+        function nextQuestion() {
+            currentStage++;
+            const startBtn = document.getElementById('startBtn');
+            const input = document.getElementById('answerInput');
+            const submitBtn = document.getElementById('submitBtn');
+
+            startBtn.classList.remove('visible');
+            input.classList.remove('visible');
+            submitBtn.classList.remove('visible');
+            input.value = "";
+
+            if (currentStage < trivia.length) {
+                typeWriter(trivia[currentStage].q, 0, () => {
+                    input.classList.add('visible');
+                    submitBtn.classList.add('visible');
+                    input.focus();
+                });
+            } else {
+                showProposal();
+            }
+        }
+
+        function checkAnswer() {
+            const userAns = document.getElementById('answerInput').value.toLowerCase();
+            if (userAns.includes(trivia[currentStage].a)) {
+                nextQuestion();
+            } else {
+                const container = document.getElementById('game-container');
+                container.style.animation = 'shake 0.5s';
+                setTimeout(() => container.style.animation = '', 500);
+            }
+        }
+
+        function showProposal() {
+            // Brighten the image by removing the heavy dark gradient
+            const bg = document.getElementById('bg-image');
+            bg.style.backgroundImage = "linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.2)), url('IMG_3830.JPG')";
+
+            typeWriter("My love, I don't know how you did it, but you made it. Wait, who are you going to Kateen with? GIRL, I AM SCARREDDDD. pause, unpause, deep breaths. ok. So now, I have one last question... Will you be my Valentine for life my baby?", 0, () => {
+                document.getElementById('input-area').innerHTML = `
+                    <div style="margin-top:20px; display:flex; gap:15px; justify-content:center; position:relative;">
+                        <button class="visible" onclick="finish()" style="background:#2ecc71;">YES!</button>
+                        <button id="noBtn" class="visible" onmouseover="moveNo()">No</button>
+                    </div>
+                `;
+            });
+        }
+
+        function moveNo() {
+            const btn = document.getElementById('noBtn');
+            btn.style.left = Math.random() * 80 + '%';
+            btn.style.top = Math.random() * 80 + '%';
+        }
+
+        function finish() {
+            const container = document.getElementById('game-container');
+            container.style.opacity = '0';
+            
+            setTimeout(() => {
+                container.style.display = 'none';
+                
+                const finalMsg = document.createElement('div');
+                finalMsg.style.cssText = `
+                    position: fixed;
+                    bottom: 15%;
+                    width: 100%;
+                    text-align: center;
+                    color: white;
+                    text-shadow: 2px 2px 15px rgba(0,0,0,0.9);
+                    z-index: 100;
+                    animation: fadeInUp 1.5s ease;
+                `;
+                finalMsg.innerHTML = `
+                    <h1 style="font-size: 3.5rem; margin: 0; padding: 0 20px;">AGHHHHHHHHHHHH GIRLLLLLLLLL</h1>
+                    <p style="font-size: 1.8rem; letter-spacing: 2px;">I love you my baby. ❤️</p>
+                `;
+                document.body.appendChild(finalMsg);
+                
+                const bg = document.getElementById('bg-image');
+                // Remove all shading at the very end and zoom in
+                bg.style.backgroundImage = "url('IMG_3830.JPG')";
+                bg.style.transform = 'scale(1.1)';
+            }, 800);
+
+            setInterval(spawnHearts, 300);
+        }
+
+        function spawnHearts() {
+            const heart = document.createElement('div');
+            heart.innerHTML = '❤️';
+            heart.style.cssText = `
+                position: fixed;
+                top: -10%;
+                left: ${Math.random() * 100}vw;
+                font-size: ${Math.random() * 20 + 20}px;
+                animation: fall ${Math.random() * 3 + 2}s linear forwards;
+                z-index: 101;
+                user-select: none;
+            `;
+            document.body.appendChild(heart);
+            setTimeout(() => heart.remove(), 5000);
+        }
+    </script>
+</body>
+</html>
